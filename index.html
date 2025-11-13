@@ -9,11 +9,13 @@
 <header><h1>🎵 Cacique Cifras Pró</h1><button id="installBtn" style="display:none">Instalar</button></header>
 <main>
   <p>Versão leve pronta para deploy via celular.</p>
-  <div style="display:flex;gap:8px;margin:10px 0"><input id="q" placeholder="Digite música ou artista" style="flex:1"><button id="go">Buscar</button></div>
+    <div style="display:flex;gap:8px;margin:10px 0"><input id="q" placeholder="Digite música ou artista" style="flex:1"><button id="go">Buscar</button></div>
   <ul id="out" style="list-style:none;padding:0;margin:0"></ul>
+  <div id="detalhe" style="margin-top:16px;padding:12px;border-radius:10px;border:1px solid #333;display:none"></div>
 </main>
+
 <script>
-const API_URL = "";const SONGS = [
+const SONGS = [
   { title: 'Segundo Sol', artist: 'Nando Reis' },
   { title: 'Relicário', artist: 'Nando Reis' },
   { title: 'All Star', artist: 'Nando Reis' },
@@ -21,23 +23,49 @@ const API_URL = "";const SONGS = [
   { title: 'Tempo Perdido', artist: 'Legião Urbana' },
 ];
 
-if('serviceWorker' in navigator){ window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js')); }
-let deferred; const installBtn=document.getElementById('installBtn');
-window.addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); deferred=e; installBtn.style.display='inline-block'; });
-installBtn.addEventListener('click', async()=>{ installBtn.style.display='none'; if(deferred){ await deferred.prompt(); deferred=null; }});
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));
+}
 
-const q=document.getElementById('q'), go=document.getElementById('go'), out=document.getElementById('out');
-go.onclick=buscar; q.onkeypress=(e)=>{ if(e.key==='Enter') buscar(); };
+let deferred;
+const installBtn = document.getElementById('installBtn');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferred = e;
+  installBtn.style.display = 'inline-block';
+});
+
+installBtn.addEventListener('click', async () => {
+  installBtn.style.display = 'none';
+  if (deferred) {
+    await deferred.prompt();
+    deferred = null;
+  }
+});
+
+const q = document.getElementById('q');
+const go = document.getElementById('go');
+const out = document.getElementById('out');
+const detalhe = document.getElementById('detalhe');
+
+go.onclick = buscar;
+q.onkeypress = (e) => {
+  if (e.key === 'Enter') buscar();
+};
+
 function buscar(){
   const term = q.value.trim().toLowerCase();
-  if(!term){
+  if (!term) {
     return;
   }
 
   out.innerHTML = '<li>Buscando…</li>';
+  detalhe.style.display = 'none';
+  detalhe.innerHTML = '';
 
   const results = SONGS.filter(
-    s =>
+    (s) =>
       s.title.toLowerCase().includes(term) ||
       s.artist.toLowerCase().includes(term)
   );
@@ -49,8 +77,8 @@ function buscar(){
 
   out.innerHTML = results
     .map(
-      s =>
-        `<li style="display:flex;justify-content:space-between;border-bottom:1px solid #333;padding:8px 4px">
+      (s) =>
+        `<li onclick="mostrarMusica('${s.title}','${s.artist}')" style="cursor:pointer;display:flex;justify-content:space-between;border-bottom:1px solid #333;padding:8px 4px">
           <div>
             <strong>${s.title}</strong><br>
             <small>${s.artist}</small>
@@ -60,5 +88,14 @@ function buscar(){
     .join('');
 }
 
+function mostrarMusica(titulo, artista){
+  detalhe.style.display = 'block';
+  detalhe.innerHTML = `
+    <h2 style="margin-top:0">${titulo}</h2>
+    <p><strong>Artista:</strong> ${artista}</p>
+    <p style="opacity:0.7">Aqui vão as cifras futuramente…</p>
+  `;
+}
 </script>
+
 </body></html>
