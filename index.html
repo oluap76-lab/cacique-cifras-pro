@@ -13,7 +13,14 @@
   <ul id="out" style="list-style:none;padding:0;margin:0"></ul>
 </main>
 <script>
-const API_URL = "https://cacique-cifras-api.up.railway.app";
+const API_URL = "";const SONGS = [
+  { title: 'Segundo Sol', artist: 'Nando Reis' },
+  { title: 'Relicário', artist: 'Nando Reis' },
+  { title: 'All Star', artist: 'Nando Reis' },
+  { title: 'Por Enquanto', artist: 'Legião Urbana' },
+  { title: 'Tempo Perdido', artist: 'Legião Urbana' },
+];
+
 if('serviceWorker' in navigator){ window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js')); }
 let deferred; const installBtn=document.getElementById('installBtn');
 window.addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); deferred=e; installBtn.style.display='inline-block'; });
@@ -21,15 +28,37 @@ installBtn.addEventListener('click', async()=>{ installBtn.style.display='none';
 
 const q=document.getElementById('q'), go=document.getElementById('go'), out=document.getElementById('out');
 go.onclick=buscar; q.onkeypress=(e)=>{ if(e.key==='Enter') buscar(); };
-async function buscar(){
-  const term=q.value.trim(); if(!term){ return; }
-  out.innerHTML='<li>Buscando…</li>';
-  try{
-    const r = await fetch(API_URL + '/search?q=' + encodeURIComponent(term), {cache:'no-store'});
-    const data = await r.json();
-    if(!Array.isArray(data)||!data.length){ out.innerHTML='<li>Nada encontrado</li>'; return; }
-    out.innerHTML = data.map(s=>`<li style="display:flex;justify-content:space-between;border-bottom:1px solid #333;padding:8px 4px"><div><strong>${s.title}</strong><br><small>${s.artist||''}</small></div></li>`).join('');
-  }catch(e){ out.innerHTML='<li>Erro de rede</li>'; }
+function buscar(){
+  const term = q.value.trim().toLowerCase();
+  if(!term){
+    return;
+  }
+
+  out.innerHTML = '<li>Buscando…</li>';
+
+  const results = SONGS.filter(
+    s =>
+      s.title.toLowerCase().includes(term) ||
+      s.artist.toLowerCase().includes(term)
+  );
+
+  if (!results.length) {
+    out.innerHTML = '<li>Nada encontrado</li>';
+    return;
+  }
+
+  out.innerHTML = results
+    .map(
+      s =>
+        `<li style="display:flex;justify-content:space-between;border-bottom:1px solid #333;padding:8px 4px">
+          <div>
+            <strong>${s.title}</strong><br>
+            <small>${s.artist}</small>
+          </div>
+        </li>`
+    )
+    .join('');
 }
+
 </script>
 </body></html>
