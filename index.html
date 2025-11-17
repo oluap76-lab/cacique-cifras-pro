@@ -15,13 +15,7 @@
 </main>
 
 <script>
-const SONGS = [
-  { title: 'Segundo Sol', artist: 'Nando Reis' },
-  { title: 'Relicário', artist: 'Nando Reis' },
-  { title: 'All Star', artist: 'Nando Reis' },
-  { title: 'Por Enquanto', artist: 'Legião Urbana' },
-  { title: 'Tempo Perdido', artist: 'Legião Urbana' },
-];
+
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));
@@ -54,11 +48,33 @@ q.onkeypress = (e) => {
   if (e.key === 'Enter') buscar();
 };
 
-function buscar(){
-  const term = q.value.trim().toLowerCase();
-  if (!term) {
-    return;
+async function buscar() {
+  const term = q.value.trim();
+  if (!term) return;
+
+ 
+
+  try {
+    const r = await fetch(API_URL + '/search?q=' + encodeURIComponent(term), { cache: 'no-store' });
+    const data = await r.json();
+
+    if (!Array.isArray(data) || !data.length) {
+      out.innerHTML = '<li>Nada encontrado</li>';
+      return;
+    }
+
+    out.innerHTML = data.map(s => `
+      <li onclick="mostrarMusica('${s.id}')" style="cursor:pointer;display:flex;justify-content:space-between;border-bottom:1px solid #333;padding:8px 4px">
+        <div>
+          <strong>${s.title}</strong><br>
+          <small>${s.artist || ''}</small>
+        </div>
+      </li>`).join('');
+  } catch (e) {
+    out.innerHTML = '<li>Erro de rede</li>';
   }
+}
+
 
   out.innerHTML = '<li>Buscando…</li>';
   detalhe.style.display = 'none';
@@ -96,6 +112,26 @@ function mostrarMusica(titulo, artista){
     <p style="opacity:0.7">Aqui vão as cifras futuramente…</p>
   `;
 }
-</script>
+const API_URL = "https://cacique-cifras-api.up.railway.app";
+
+async function mostrarMusica(id) {
+  try {
+    const r = await fetch(API_URL + '/song/' + id);
+    const data = await r.json();
+
+    detalhe.style.display = 'block';
+    detalhe.innerHTML = `
+      <h2>${data.title}</h2>
+      <p><strong>Artista:</strong> ${data.artist}</p>
+      <pre style="white-space:pre-wrap;font-family:monospace">${data.chords}</pre>
+    `;
+  } catch (e) {
+    detalhe.innerHTML = '<p>Erro ao carregar cifra</p>';
+    detalhe.style.display = 'block';
+  }
+}
+
+
+
 
 </body></html>
